@@ -1,0 +1,40 @@
+name: Compilar APK
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Java 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Descomprimir el proyecto
+        run: |
+          Z=$(ls *.zip | head -n1)
+          echo "Descomprimiendo $Z"
+          unzip -oq "$Z"
+
+      - name: Compilar APK (debug)
+        working-directory: InventarioTelefonos
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Renombrar el APK
+        working-directory: InventarioTelefonos
+        run: cp app/build/outputs/apk/debug/app-debug.apk InventarioTelefonos.apk
+
+      - name: Publicar el APK como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: InventarioTelefonos-apk
+          path: InventarioTelefonos/InventarioTelefonos.apk
